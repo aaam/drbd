@@ -22,28 +22,16 @@ require 'chef/shell_out'
 
 include_recipe "drbd"
 
-resource = "pair"
-
-if node['drbd']['remote_host'].nil?
-  Chef::Application.fatal! "You must have a ['drbd']['remote_host'] defined to use the drbd::pair recipe."
-end
-
-#remote = search(:node, "name:#{node['drbd']['remote_host']}")[0]
-
-template "/etc/drbd.d/#{resource}.res" do
+template "/etc/drbd.d/#{node['drbd']['resource']}.res" do
   source "res.erb"
-  variables(
-    :resource => resource,
-    :remote_ip => node['drbd']['remote_host']
-    )
   owner "root"
   group "root"
   action :create
 end
 
 #first pass only, initialize drbd
-execute "drbdadm create-md #{resource}" do
-  subscribes :run, resources(:template => "/etc/drbd.d/#{resource}.res")
+execute "drbdadm create-md #{node['drbd']['resource']}" do
+  subscribes :run, resources(:template => "/etc/drbd.d/#{node['drbd']['resource']}.res")
   notifies :restart, resources(:service => "drbd"), :immediate
   only_if do
     cmd = Chef::ShellOut.new("drbd-overview")
@@ -56,7 +44,7 @@ end
 
 #claim primary based off of node['drbd']['master']
 execute "drbdadm -- --overwrite-data-of-peer primary all" do
-  subscribes :run, resources(:execute => "drbdadm create-md #{resource}")
+  subscribes :run, resources(:execute => "drbdadm create-md #{node['drbd']['resource']}")
   only_if { node['drbd']['master'] && !node['drbd']['configured'] }
   action :nothing
 end

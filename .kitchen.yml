@@ -1,0 +1,37 @@
+---
+driver_plugin: vagrant
+platforms:
+- name: ubuntu-d1
+  driver_config:
+    box: opscode-ubuntu-1204-sda3
+    network:
+      private_network: "ip: '10.30.0.10'"
+  run_list:
+  - recipe[apt]
+  attributes:
+    drbd:
+      master: true
+- name: ubuntu-d2
+  driver_config:
+    box: opscode-ubuntu-1204-sda3
+    network:
+      private_network: "ip: '10.30.0.11'"
+  run_list:
+  - recipe[apt]
+suites:
+- name: default
+  run_list:
+  - recipe[xfs]
+  - recipe[drbd::pair]
+  attributes:
+    drbd:
+      disk: "/dev/sda3"
+      mount: "/nfs"
+      fs_type: "xfs"
+      peers:
+      - hostname: "default-ubuntu-d1.vagrantup.com"
+        address: "10.30.0.10"
+        port: 7789
+      - hostname: "default-ubuntu-d2.vagrantup.com"
+        address: "10.30.0.11"
+        port: 7789

@@ -8,7 +8,7 @@ Requirements
 ============
 Platform
 --------
-Tested with Ubuntu 10.04 and 10.10. You must have the 'linux-server' package and 'linux-headers-server' kernel installed to properly support the drbd module.
+Tested with Ubuntu 12.04. You must have the 'linux-server' package and 'linux-headers-server' kernel installed to properly support the drbd module.
 
 Recipes
 =======
@@ -16,23 +16,31 @@ default
 -------
 Installs drbd but does no configuration.
 
-default
--------
-Given a filesystem and a partner host, configures block replication between the hosts. The master will claim the primary, format the filesystem and mount the partition. The slave will simply mirror without mounting. **It currently takes 2 chef-client runs to ensure the pair is synced properly.**
+pair
+----
+Given a filesystem and a partner host, configures block replication between the hosts. The master will claim the primary, format the filesystem and mount the partition. The slave will simply mirror without mounting.
 
 Attributes
 ==========
 The required attributes are
 
-* `node['drbd]['remote_host']` - Remote host to pair with.
-* `node['drbd]['disk']` - Disk partition to mirror.
-* `node['drbd]['mount']` - Mount point to mirror.
-* `node['drbd]['fs_type']` - Disk format for the mirrored disk, defaults to `ext3`.
-* `node['drbd]['master']` - Whether this node is master between the pair, defaults to `false`.
+* `node['drbd']['remote_host']` - Remote host to pair with.
+* `node['drbd']['disk']` - Disk partition to mirror.
+* `node['drbd']['mount']` - Mount point to mirror.
+* `node['drbd']['fs_type']` - Disk format for the mirrored disk, defaults to `ext3`.
+* `node['drbd']['master']` - Whether this node is master between the pair, defaults to `false`.
+* `node['drbd']['mount_fs_on_master']` - Whether to mount the filesystem on the master. Defaults to `false`
+* `node['drbd']['chef_sentinel_file_path']` - single-run guard file path. Defaults to `/etc/sentinel-chef-drbd`.
 
 Roles
 =====
 There are a pair of example roles `drbd-pair.rb` and `drbd-pair-master.rb` with the cookbook source.
+
+Testing the pair recipe
+=======================
+There's currently a bug in either vagrant or test-kitchen that makes the second instance come up with the wrong IP address on eth1. You'll have to log in and fix it before the drbd restart step can complete.
+
+The convergence must be run in parallel.
 
 License and Author
 ==================

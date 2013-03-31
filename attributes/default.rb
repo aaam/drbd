@@ -5,3 +5,5 @@ default['drbd']['fs_type'] = "ext3"
 default['drbd']['dev'] = "/dev/drbd0"
 default['drbd']['master'] = false
 default['drbd']['port'] = 7789
+default['drbd']['mount_fs_on_master'] = false
+default['drbd']['chef_sentinel_file_path'] = "/etc/sentinel-chef-drbd"

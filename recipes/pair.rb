@@ -45,19 +45,22 @@ end
 #claim primary based off of node['drbd']['master']
 execute "drbdadm -- --overwrite-data-of-peer primary all" do
   subscribes :run, resources("execute[drbdadm create-md #{node['drbd']['resource']}]")
-  only_if { node['drbd']['master'] && !node['drbd']['configured'] }
+  only_if { node['drbd']['master'] && !::File.exists?(node['drbd']['chef_sentinel_file_path']) }
   action :nothing
 end
 
 #You may now create a filesystem on the device, use it as a raw block device
 execute "mkfs -t #{node['drbd']['fs_type']} #{node['drbd']['dev']}" do
   subscribes :run, resources("execute[drbdadm -- --overwrite-data-of-peer primary all]")
-  only_if { node['drbd']['master'] && !node['drbd']['configured'] }
+  only_if { node['drbd']['master'] && !::File.exists?(node['drbd']['chef_sentinel_file_path']) }
   action :nothing
 end
 
 directory node['drbd']['mount'] do
-  only_if { node['drbd']['master'] && !node['drbd']['configured'] }
+  only_if do
+    node['drbd']['master'] &&
+    !::File.exists?(node['drbd']['chef_sentinel_file_path'])
+  end
   action :create
 end
 
@@ -65,14 +68,18 @@ end
 mount node['drbd']['mount'] do
   device node['drbd']['dev']
   fstype node['drbd']['fs_type']
-  only_if { node['drbd']['master'] && node['drbd']['configured'] }
+  only_if do
+    node['drbd']['master'] &&
+    node['drbd']['mount_fs_on_master'] &&
+    ::File.exists?(node['drbd']['chef_sentinel_file_path'])
+  end
   action :mount
 end
 
 #hack to get around the mount failing
 ruby_block "set drbd configured flag" do
   block do
-    node.set['drbd']['configured'] = true
+    FileUtils.touch(node['drbd']['chef_sentinel_file_path'])
   end
   subscribes :create, resources("execute[mkfs -t #{node['drbd']['fs_type']} #{node['drbd']['dev']}]")
   action :nothing

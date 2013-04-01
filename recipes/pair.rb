@@ -32,7 +32,7 @@ end
 #first pass only, initialize drbd
 execute "drbdadm create-md #{node['drbd']['resource']}" do
   subscribes :run, resources("template[/etc/drbd.d/#{node['drbd']['resource']}.res]")
-  notifies :restart, 'service[drbd]', :immediate
+  notifies :restart, 'service[drbd]', :immediately
   only_if do
     cmd = Chef::ShellOut.new("drbd-overview")
     overview = cmd.run_command

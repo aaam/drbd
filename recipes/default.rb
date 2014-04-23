@@ -26,16 +26,11 @@ when 'debian'
     action :install
   end
 when 'rhel'
-  yum_key "RPM-GPG-KEY.atrpms" do
-    url "http://packages.atrpms.net/RPM-GPG-KEY.atrpms"
-    action :add
-  end
-
   yum_repository "atrpms" do
     repo_name "atrpms"
     description "ATrpms third-party repo"
     url "http://dl.atrpms.net/el$releasever-$basearch/atrpms/stable"
-    key "RPM-GPG-KEY.atrpms"
+    gpgkey "http://packages.atrpms.net/RPM-GPG-KEY.atrpms"
     action :add
   end
 
